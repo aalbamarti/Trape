@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Diccionari de trapezi</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: #f5f5f5; padding: 20px; }
+    h1 { text-align: center; }
+    .trick-card { 
+      background: #fff; padding: 15px; margin: 10px auto; 
+      border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); max-width: 600px;
+    }
+    iframe { width: 100%; height: 315px; border: none; }
+    .tags { font-size: 0.9em; color: #555; }
+    .tag-badge {
+      background: #eee;
+      color: #333;
+      padding: 2px 6px;
+      margin: 2px;
+      border-radius: 4px;
+      font-size: 0.8em;
+      display: inline-block;
+    }
+    .filters {
+    text-align: center;
+    margin-bottom: 20px;
+    }
+    .alphabet-bar,
+    .difficulty-menu button {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .alphabet-bar,
+    .show-all-btn,
+    .difficulty-menu button{
+    background: #eee;
+    border: none;
+    margin: 3px;
+    padding: 5px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.2s;
+    }
+
+    .alphabet-bar,
+    .difficulty-menu button:hover{
+    background: #ccc;
+    }
+
+   .alphabet-bar,
+   .difficulty-menu button.active {
+    background: #999;
+    color: white;
+  }
+  </style>
+</head>
+<body>
+  <h1>Diccionari de trapezi</h1>
+  <div id="alphabet-bar" class="alphabet-bar"></div>
+  <div id="difficulty-menu" class="difficulty-menu"></div>
+
+
+  <div id="tricks-container"></div>
+  <script>
+    // Published Google Sheet CSV link
+    const sheetCsvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSe_o01hyzHRGRPjeXlPNTdtYLyHr7JVLOh21fd40NUVJgkWcHNVjHNoilj3rzKMZj7B2J6453J_otO/pub?gid=0&single=true&output=csv";
+    let allTricks = [];
+    
+
+      // Function to convert YouTube links (regular, shorts, youtu.be) to embed format
+   function getEmbedLink(url) {
+        if (!url) return "";
+        if (url.includes("watch?v=")) return url.replace("watch?v=", "embed/");
+        if (url.includes("youtu.be/")) return url.replace("youtu.be/", "www.youtube.com/embed/");
+        if (url.includes("/shorts/")) return url.replace("/shorts/", "/embed/");
+        return url;
+    }
+
+    // Function to fetch CSV and convert to JSON
+    async function fetchTricks() {
+      const response = await fetch(sheetCsvUrl);
+      const csvText = await response.text();
+      const rows = csvText.split('\n').map(row => row.split(','));
+      const headers = rows.shift();
+      const tricks = rows.map(row => {
+        let obj = {};
+        headers.forEach((header, i) => {
+          obj[header.trim()] = row[i] ? row[i].trim() : "";
+        });
+        return obj;
+      });
+      return tricks;
+    }
+
+    function createTrickCard(trick) {
+      //const container = document.getElementById("tricks-container");
+      const card = document.createElement("div");
+      card.className = "trick-card";
+      const tagsArray = trick.Etiquetes
+        ? trick.Etiquetes.split(' ').map(tag => tag.trim()).filter(tag => tag.length > 0)
+        : [];
+
+
+      card.innerHTML = `
+        <h2>${trick.Nom}</h2>
+        <p><strong>Dificultat:</strong> ${trick.Dificultat}</p>
+        <p class="tags">
+          <strong>Tags:</strong> ${tagsArray.map(tag => `<span class="tag-badge">${tag}</span>`).join(' ')}
+        </p>
+      
+        <p>${trick.Descripció}</p>
+        <p><em>${trick.Notes}</em></p>
+        <iframe src="${getEmbedLink(trick.link)}" allowfullscreen></iframe>
+        `;
+
+      return card;
+    }
+    function displayTricks(tricks) {
+      const container = document.getElementById("tricks-container");
+      container.innerHTML = ""; // Clear previous cards
+
+      tricks.forEach(trick => {
+        const card = createTrickCard(trick);
+        container.appendChild(card);
+      });
+    }
+    function createAlphabetBar(tricks) {
+      const alphabetBar = document.getElementById("alphabet-bar");
+      const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
+      const showAllBtn = document.createElement("button");
+      showAllBtn.textContent = "Tots";
+      showAllBtn.addEventListener("click", () => {
+        document.querySelectorAll(".alphabet-bar button").forEach(b => b.classList.remove("active"));
+        showAllBtn.classList.add("active");
+        //displayTricks(allTricks);
+        selectedLetter = "All";           // special case
+        filterAndDisplay();
+      });
+      alphabetBar.appendChild(showAllBtn);
+      letters.forEach(letter => {
+        const btn = document.createElement("button");
+        btn.textContent = letter;
+        btn.addEventListener("click", () => {
+          document.querySelectorAll(".alphabet-bar button").forEach(b => b.classList.remove("active"));
+          btn.classList.add("active");
+
+          // Filter tricks by first letter of 'Nom'
+          //const filtered = tricks.filter(t => t.Nom && t.Nom.toUpperCase().startsWith(letter));
+          //displayTricks(filtered);
+          selectedLetter = btn.textContent; // store selected letter
+          filterAndDisplay();    
+        });
+        alphabetBar.appendChild(btn);
+      });
+    }
+
+    // Keep track of selected difficulties
+let selectedDifficulties = new Set();
+let selectedLetter = null;
+function filterAndDisplay() {
+  let filtered = allTricks;
+
+  // Filter by letter if one is selected
+  if (selectedLetter && selectedLetter !== "All") {
+    filtered = filtered.filter(t => t.Nom && t.Nom.toUpperCase().startsWith(selectedLetter));
+  }
+
+  // Filter by selected difficulties
+  if (selectedDifficulties.size > 0) {
+    filtered = filtered.filter(t => selectedDifficulties.has(t.Dificultat));
+  }
+
+  displayTricks(filtered);
+}
+function createDifficultyMenu(tricks) {
+  const container = document.getElementById("difficulty-menu");
+
+  // Get all unique difficulties from your sheet
+  const difficultyOrder = ["Fàcil", "Mitjà", "Difícil"];
+  const difficulties = Array.from(new Set(tricks.map(t => t.Dificultat).filter(Boolean)))
+                          .sort((a, b) => difficultyOrder.indexOf(a) - difficultyOrder.indexOf(b));
+
+  difficulties.forEach(diff => {
+    const btn = document.createElement("button");
+    btn.textContent = diff;
+    
+    btn.addEventListener("click", () => {
+      // Toggle selection
+      if (selectedDifficulties.has(diff)) {
+        selectedDifficulties.delete(diff);
+        btn.classList.remove("active");
+      } else {
+        selectedDifficulties.add(diff);
+        btn.classList.add("active");
+      }
+      filterAndDisplay();
+    });
+
+    container.appendChild(btn);
+  });
+}
+
+async function init() {
+      const tricks = await fetchTricks();
+      allTricks = tricks;
+      displayTricks(tricks);
+      createAlphabetBar(tricks);
+      createDifficultyMenu(tricks);
+    }
+
+    init();
+  </script>
+</body>
+</html>
