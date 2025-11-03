@@ -27,13 +27,15 @@
     margin-bottom: 20px;
     }
     .alphabet-bar,
-    .difficulty-menu button {
+    .difficulty-menu,
+    .tags-menu button {
       text-align: center;
       margin-bottom: 20px;
     }
 
     .alphabet-bar,
     .show-all-btn,
+    .tags-menu,
     .difficulty-menu button{
     background: #eee;
     border: none;
@@ -45,21 +47,24 @@
     }
 
     .alphabet-bar,
-    .difficulty-menu button:hover{
+    .difficulty-menu,
+    .tags-menu button:hover{
     background: #ccc;
     }
 
-   .alphabet-bar,
-   .difficulty-menu button.active {
+  button.active {
     background: #999;
     color: white;
   }
   </style>
 </head>
 <body>
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+
   <h1>Diccionari de trapezi</h1>
   <div id="alphabet-bar" class="alphabet-bar"></div>
   <div id="difficulty-menu" class="difficulty-menu"></div>
+  <div id="tags-menu" class="tags-menu"></div>
 
 
   <div id="tricks-container"></div>
@@ -82,16 +87,24 @@
     async function fetchTricks() {
       const response = await fetch(sheetCsvUrl);
       const csvText = await response.text();
-      const rows = csvText.split('\n').map(row => row.split(','));
-      const headers = rows.shift();
-      const tricks = rows.map(row => {
-        let obj = {};
-        headers.forEach((header, i) => {
-          obj[header.trim()] = row[i] ? row[i].trim() : "";
+
+      return new Promise(resolve => {
+        Papa.parse(csvText, {
+          header: true,        // first row is headers
+          skipEmptyLines: true,
+          complete: function(results) {
+            // trim all values
+            const tricks = results.data.map(row => {
+              Object.keys(row).forEach(key => {
+                if (row[key]) row[key] = row[key].trim();
+                else row[key] = ""; // ensure empty cells are empty strings
+              });
+              return row;
+            });
+            resolve(tricks);
+          }
         });
-        return obj;
       });
-      return tricks;
     }
 
     function createTrickCard(trick) {
@@ -159,6 +172,8 @@
     // Keep track of selected difficulties
 let selectedDifficulties = new Set();
 let selectedLetter = null;
+let selectedTags = new Set();
+
 function filterAndDisplay() {
   let filtered = allTricks;
 
@@ -171,6 +186,13 @@ function filterAndDisplay() {
   if (selectedDifficulties.size > 0) {
     filtered = filtered.filter(t => selectedDifficulties.has(t.Dificultat));
   }
+ if (selectedTags.size > 0) {
+  filtered = filtered.filter(t => {
+    if (!t.Etiquetes) return false;
+    const trickTags = t.Etiquetes.split(/\s+/).map(tag => tag.trim()).filter(Boolean);
+    return trickTags.some(tag => selectedTags.has(tag));
+  });
+}
 
   displayTricks(filtered);
 }
@@ -202,13 +224,47 @@ function createDifficultyMenu(tricks) {
   });
 }
 
+function createTagMenu(tricks) {
+  const container = document.getElementById("tags-menu");
+  container.innerHTML = "";
+
+  // Get all unique single-word tags
+  const allTags = Array.from(new Set(
+    tricks.flatMap(t => t.Etiquetes 
+      ? t.Etiquetes.split(/\s+/).map(tag => tag.trim()).filter(Boolean)
+      : []
+  )));
+
+  allTags.forEach(tag => {
+    const btn = document.createElement("button");
+    btn.textContent = tag;
+
+    btn.addEventListener("click", () => {
+      if (selectedTags.has(tag)) {
+        selectedTags.delete(tag);
+        btn.classList.remove("active");
+      } else {
+        selectedTags.add(tag);
+        btn.classList.add("active");
+      }
+      filterAndDisplay();
+    });
+
+    container.appendChild(btn);
+  });
+}
+
+
 async function init() {
-      const tricks = await fetchTricks();
-      allTricks = tricks;
-      displayTricks(tricks);
-      createAlphabetBar(tricks);
-      createDifficultyMenu(tricks);
-    }
+  const tricks = await fetchTricks();
+  console.log(tricks); // <-- check all objects, especially Etiquetes
+  allTricks = tricks;
+  displayTricks(tricks);
+  createAlphabetBar(tricks);
+  createDifficultyMenu(tricks);
+  createTagMenu(tricks);
+}
+
 
     init();
   </script>
