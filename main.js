@@ -196,4 +196,6 @@ console.log("main.js is loaded!");
     }
 
 
-        init();
+    document.addEventListener("DOMContentLoaded", () => {
+    init();
+});
