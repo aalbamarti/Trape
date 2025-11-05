@@ -4,6 +4,7 @@
     .trick-card { 
       background: #fff; padding: 15px; margin: 10px auto; 
       border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); max-width: 600px;
+      overflow: auto;
     }
     iframe { width: 100%; height: 315px; border: none; }
     .tags { font-size: 0.9em; color: #555; }
@@ -50,3 +51,24 @@
     background: #999;
     color: white;
   }
+
+  .download-btn {
+  display: inline-block;
+  background: #58d5eb;
+  color: rgb(7, 7, 7);
+  padding: 8px 12px;
+  border-radius: 6px;
+  text-decoration: none;
+  transition: background 0.2s;
+  text-align: right;
+}
+.download-btn:hover {
+  background: #45a049;
+}
+
+.download-container {
+  display: flex;
+  justify-content: flex-end; /* moves it to the right */
+  margin-top: 10px;
+}
+
