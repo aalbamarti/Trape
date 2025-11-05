@@ -54,10 +54,11 @@ function createTrickCard(trick) {
 
 
   card.innerHTML = `
-    <h2>${trick.Nom}</h2>
-    <p><strong>Dificultat:</strong> ${trick.Dificultat}</p>
-    <p class="tags">
-      <strong>Tags:</strong> ${tagsArray.map(tag => `<span class="tag-badge">${tag}</span>`).join(' ')}
+    <div class="trick-header">
+      <h2>${trick.Nom}</h2>
+      <span class="tag-badge difficulty">${trick.Dificultat}</span>
+    </div>
+    <p></strong> ${tagsArray.map(tag => `<span class="tag-badge">${tag}</span>`).join(' ')}
     </p>
     <p><em>${trick.Notes}</em></p>
     <iframe src="${getEmbedLink(trick.link)}" allowfullscreen></iframe> 
@@ -83,7 +84,7 @@ function createAlphabetBar(tricks) {
   const showAllBtn = document.createElement("button");
   showAllBtn.textContent = "Tots";
   showAllBtn.addEventListener("click", () => {
-    document.querySelectorAll(".alphabet-bar button").forEach(b => b.classList.remove("active"));
+    document.querySelectorAll(".line-button").forEach(b => b.classList.remove("active"));
     showAllBtn.classList.add("active");
     //displayTricks(allTricks);
     selectedLetter = "All";           // special case
@@ -94,7 +95,7 @@ function createAlphabetBar(tricks) {
     const btn = document.createElement("button");
     btn.textContent = letter;
     btn.addEventListener("click", () => {
-      document.querySelectorAll(".alphabet-bar button").forEach(b => b.classList.remove("active"));
+      document.querySelectorAll(".line-button").forEach(b => b.classList.remove("active"));
       btn.classList.add("active");
 
       // Filter tricks by first letter of 'Nom'
