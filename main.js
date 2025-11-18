@@ -46,22 +46,21 @@ async function fetchTricks() {
 function createTrickCard(trick) {
   //const container = document.getElementById("tricks-container");
   const card = document.createElement("div");
-  const driveDownload = getDriveDownloadLink(trick.DriveLink);
+  const driveDownload = getDriveDownloadLink(trick.drive_link);
   card.className = "trick-card";
-  const tagsArray = trick.Etiquetes
-    ? trick.Etiquetes.split(' ').map(tag => tag.trim()).filter(tag => tag.length > 0)
+  const tagsArray = trick.tags
+    ? trick.tags.split(' ').map(tag => tag.trim()).filter(tag => tag.length > 0)
     : [];
 
 
   card.innerHTML = `
     <div class="trick-header">
-      <h2>${trick.Nom}</h2>
-      <span class="tag-badge difficulty">${trick.Dificultat}</span>
+      <h2>${trick.name}</h2>
+      <span class="tag-badge difficulty">${trick.difficulty}</span>
     </div>
     <p></strong> ${tagsArray.map(tag => `<span class="tag-badge">${tag}</span>`).join(' ')}
     </p>
-    <p><em>${trick.Notes}</em></p>
-    <iframe src="${getEmbedLink(trick.link)}" allowfullscreen></iframe> 
+    <iframe src="${getEmbedLink(trick.youtube_link)}" allowfullscreen></iframe> 
     ${driveDownload ? `
     <div class="download-container">
     <a href="${driveDownload}" class="download-btn" download>📥 Descarrega el vídeo</a></div>` : ""}
@@ -123,15 +122,15 @@ function filterAndDisplay() {
 
   // Filter by selected difficulties
   if (selectedDifficulties.size > 0) {
-    filtered = filtered.filter(t => selectedDifficulties.has(t.Dificultat));
+    filtered = filtered.filter(t => selectedDifficulties.has(t.difficulty));
   }
-if (selectedTags.size > 0) {
-  filtered = filtered.filter(t => {
-    if (!t.Etiquetes) return false;
-    const trickTags = t.Etiquetes.split(/\s+/).map(tag => tag.trim()).filter(Boolean);
-    return trickTags.some(tag => selectedTags.has(tag));
-  });
-}
+  if (selectedTags.size > 0) {
+    filtered = filtered.filter(t => {
+      if (!t.tags) return false;
+      const trickTags = t.tags.split(/\s+/).map(tag => tag.trim()).filter(Boolean);
+      return trickTags.some(tag => selectedTags.has(tag));
+    });
+  }
 
   displayTricks(filtered);
 }
@@ -169,8 +168,8 @@ function createTagMenu(tricks) {
 
   // Get all unique single-word tags
   const allTags = Array.from(new Set(
-    tricks.flatMap(t => t.Etiquetes 
-      ? t.Etiquetes.split(/\s+/).map(tag => tag.trim()).filter(Boolean)
+    tricks.flatMap(t => t.tags
+      ? t.tags.split(/\s+/).map(tag => tag.trim()).filter(Boolean)
       : []
   )));
 
