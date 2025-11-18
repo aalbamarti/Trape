@@ -24,47 +24,26 @@ app.get("/", (req, res) => {
 });
 
 console.log(process.env.DB_USER, process.env.DB_PASSWORD, process.env.DB_NAME);
-// Database connection
-const db = await mysql.createPool({
+
+// Database connection pool
+const db = mysql.createPool({
   host: process.env.DB_HOST,
   user: process.env.DB_USER,
   password: process.env.DB_PASSWORD,
   database: process.env.DB_NAME
 });
-// MySQL connection configuration
 
-
-let connection;
-
-// Initialize connection
-async function initDb() {
-  try {
-    connection = await mysql.createConnection(db);
-    console.log("✅ Connected to MySQL");
-  } catch (err) {
-    console.error("❌ MySQL connection error:", err);
-    process.exit(1); // stop server if DB fails
-  }
-}
 
 // Endpoint to fetch tricks
 app.get("/tricks", async (req, res) => {
   try {
-    const [rows] = await connection.query("SELECT * FROM tricks");
+    const [rows] = await db.query("SELECT * FROM tricks");
     res.json(rows);
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Database query failed" });
   }
 });
-
-const PORT = 3000;
-
-app.listen(PORT, async () => {
-  await initDb();
-  console.log(`Server running at http://localhost:${PORT}`);
-});
-
 
 //User registration route
 app.post("/register", async (req, res) => {
@@ -83,6 +62,7 @@ app.post("/register", async (req, res) => {
     res.status(500).json({ error: "Server error" });
   }
 });
+
 //User login route
 app.post("/login", async (req, res) => {
   const { username, password } = req.body;
@@ -146,5 +126,5 @@ app.post("/progress", authenticate, async (req, res) => {
   }
 });
 
-//const PORT = process.env.PORT || 3000;
+const PORT = 3000;
 app.listen(PORT, () => console.log(`Server running at http://localhost:${PORT}`));
