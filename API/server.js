@@ -13,7 +13,6 @@ app.use(cors());
 app.use(express.json());
 
 //app.use(cors());
-console.log("JWT_SECRET is:", process.env.JWT_SECRET);
 // Required for ES modules to get __dirname
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -22,8 +21,6 @@ app.use(express.static(path.join(__dirname, "public")));
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "index1.html"));
 });
-
-console.log(process.env.DB_USER, process.env.DB_PASSWORD, process.env.DB_NAME);
 
 // Database connection pool
 const db = mysql.createPool({
@@ -51,6 +48,7 @@ app.get("/tricks", async (req, res) => {
 //User registration route
 app.post("/register", async (req, res) => {
   const { username, password } = req.body;
+  console.log("Received /register request:", req.body); // <<< això veuràs al terminal
 
   try {
     const [existing] = await db.query("SELECT id FROM users WHERE username=?", [username]);

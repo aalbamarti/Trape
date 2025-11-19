@@ -1,195 +1,87 @@
+// js/main.js
+import { fetchTricks } from "./api.js";
+import { filterTricks } from "./filters.js";
+import { displayTricks, setupAlphabetBar, setupDifficultyMenu, setupTagsMenu } from "./ui.js";
+
 let allTricks = [];
-    
-const apiUrl = "http://localhost:3000/tricks";
 
-async function fetchTricks() {
-  const response = await fetch(apiUrl);
-  if (!response.ok) {
-    throw new Error("Failed to fetch tricks from backend");
-  }
-  const tricks = await response.json();
-  return tricks;
+async function refresh() {
+  displayTricks(filterTricks(allTricks));
 }
-
-// Function to convert YouTube links (regular, shorts, youtu.be) to embed format
-function getEmbedLink(url) {
-    if (!url) return "";
-    if (url.includes("watch?v=")) return url.replace("watch?v=", "embed/");
-    if (url.includes("youtu.be/")) return url.replace("youtu.be/", "www.youtube.com/embed/");
-    if (url.includes("/shorts/")) return url.replace("/shorts/", "/embed/");
-    return url;
-}
-//Function to convert Google Drive links to direct download format
-function getDriveDownloadLink(url) {
-  if (!url) return "";
-  const match = url.match(/\/d\/([a-zA-Z0-9_-]+)/);
-  return match ? `https://drive.google.com/uc?export=download&id=${match[1]}` : "";
-}
-
-function createTrickCard(trick) {
-  //const container = document.getElementById("tricks-container");
-  const card = document.createElement("div");
-  const driveDownload = getDriveDownloadLink(trick.drive_link);
-  card.className = "trick-card";
-  const tagsArray = trick.tags
-    ? trick.tags.split(' ').map(tag => tag.trim()).filter(tag => tag.length > 0)
-    : [];
-
-
-  card.innerHTML = `
-    <div class="trick-header">
-      <h2>${trick.name}</h2>
-      <span class="tag-badge difficulty">${trick.difficulty}</span>
-    </div>
-    <p></strong> ${tagsArray.map(tag => `<span class="tag-badge">${tag}</span>`).join(' ')}
-    </p>
-    <iframe src="${getEmbedLink(trick.youtube_link)}" allowfullscreen></iframe> 
-    ${driveDownload ? `
-    <div class="download-container">
-    <a href="${driveDownload}" class="download-btn" download>📥 Descarrega el vídeo</a></div>` : ""}
-    `;
-
-  return card;
-}
-function displayTricks(tricks) {
-  const container = document.getElementById("tricks-container");
-  container.innerHTML = ""; // Clear previous cards
-
-  tricks.forEach(trick => {
-    const card = createTrickCard(trick);
-    container.appendChild(card);
-  });
-}
-function createAlphabetBar(tricks) {
-  const alphabetBar = document.getElementById("alphabet-bar");
-  const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
-  const showAllBtn = document.createElement("button");
-  showAllBtn.textContent = "Tots";
-  showAllBtn.addEventListener("click", () => {
-    document.querySelectorAll(".line-button").forEach(b => b.classList.remove("active"));
-    showAllBtn.classList.add("active");
-    //displayTricks(allTricks);
-    selectedLetter = "All";           // special case
-    filterAndDisplay();
-  });
-  alphabetBar.appendChild(showAllBtn);
-  letters.forEach(letter => {
-    const btn = document.createElement("button");
-    btn.textContent = letter;
-    btn.addEventListener("click", () => {
-      document.querySelectorAll(".line-button").forEach(b => b.classList.remove("active"));
-      btn.classList.add("active");
-
-      // Filter tricks by first letter of 'Nom'
-      //const filtered = tricks.filter(t => t.Nom && t.Nom.toUpperCase().startsWith(letter));
-      //displayTricks(filtered);
-      selectedLetter = btn.textContent; // store selected letter
-      filterAndDisplay();    
-    });
-    alphabetBar.appendChild(btn);
-  });
-}
-
-// Keep track of selected difficulties
-let selectedDifficulties = new Set();
-let selectedLetter = null;
-let selectedTags = new Set();
-
-function filterAndDisplay() {
-  let filtered = allTricks;
-
-  // Filter by letter if one is selected
-  if (selectedLetter && selectedLetter !== "All") {
-    filtered = filtered.filter(t => t.Nom && t.Nom.toUpperCase().startsWith(selectedLetter));
-  }
-
-  // Filter by selected difficulties
-  if (selectedDifficulties.size > 0) {
-    filtered = filtered.filter(t => selectedDifficulties.has(t.difficulty));
-  }
-if (selectedTags.size > 0) {
-  filtered = filtered.filter(t => {
-    if (!t.tags) return false;
-    const trickTags = t.tags.split(/\s+/).map(tag => tag.trim()).filter(Boolean);
-    return trickTags.some(tag => selectedTags.has(tag));
-  });
-}
-
-  displayTricks(filtered);
-}
-function createDifficultyMenu(tricks) {
-  const container = document.getElementById("difficulty-menu");
-
-  // Get all unique difficulties from your sheet
-  const difficultyOrder = ["Fàcil", "Mitjà", "Difícil"];
-  const difficulties = Array.from(new Set(tricks.map(t => t.difficulty).filter(Boolean)))
-                          .sort((a, b) => difficultyOrder.indexOf(a) - difficultyOrder.indexOf(b));
-
-  difficulties.forEach(diff => {
-    const btn = document.createElement("button");
-    btn.textContent = diff;
-    
-    btn.addEventListener("click", () => {
-      // Toggle selection
-      if (selectedDifficulties.has(diff)) {
-        selectedDifficulties.delete(diff);
-        btn.classList.remove("active");
-      } else {
-        selectedDifficulties.add(diff);
-        btn.classList.add("active");
-      }
-      filterAndDisplay();
-    });
-
-    container.appendChild(btn);
-  });
-}
-
-function createTagMenu(tricks) {
-  const container = document.getElementById("tags-menu");
-  container.innerHTML = "";
-
-  // Get all unique single-word tags
-  const allTags = Array.from(new Set(
-    tricks.flatMap(t => t.tags
-      ? t.tags.split(/\s+/).map(tag => tag.trim()).filter(Boolean)
-      : []
-  )));
-
-  allTags.forEach(tag => {
-    const btn = document.createElement("button");
-    btn.textContent = tag;
-
-    btn.addEventListener("click", () => {
-      if (selectedTags.has(tag)) {
-        selectedTags.delete(tag);
-        btn.classList.remove("active");
-      } else {
-        selectedTags.add(tag);
-        btn.classList.add("active");
-      }
-      filterAndDisplay();
-    });
-
-    container.appendChild(btn);
-  });
-}
-
 
 async function init() {
-  const tricks = await fetchTricks();
-  console.log(tricks); // <-- check all objects, especially Etiquetes
-  allTricks = tricks;
-  displayTricks(tricks);
-  createAlphabetBar(tricks);
-  createDifficultyMenu(tricks);
-  createTagMenu(tricks);
-  console.log(tricks);
+  allTricks = await fetchTricks();
 
+  displayTricks(allTricks);
+
+  setupAlphabetBar(allTricks, refresh);
+  setupDifficultyMenu(allTricks, refresh);
+  setupTagsMenu(allTricks, refresh);
 }
 
+document.addEventListener("DOMContentLoaded", init);
+
+import { openModal, closeModal, login, register, logout, getToken } from "./auth.js";
+
+function setupAuthUI() {
+  const loginBtn = document.getElementById("login-btn");
+  const userInfo = document.getElementById("user-info");
+
+  // If user is logged in
+  const token = getToken();
+  if (token) {
+    loginBtn.classList.add("hidden");
+    userInfo.classList.remove("hidden");
+    userInfo.innerHTML = `
+      Sessió iniciada
+      <button id="logout-btn">Sortir</button>
+    `;
+
+    document.getElementById("logout-btn").onclick = () => logout();
+    return;
+  }
+
+  // If user is NOT logged in
+  loginBtn.onclick = () => openModal("login-modal");
+
+  // Close modals
+  document.getElementById("close-login").onclick = () => closeModal("login-modal");
+  document.getElementById("close-register").onclick = () => closeModal("register-modal");
+
+  // Switch to register
+  document.getElementById("open-register").onclick = () => {
+    closeModal("login-modal");
+    openModal("register-modal");
+  };
+
+  // Login submit
+  document.getElementById("login-submit").onclick = async () => {
+    const u = document.getElementById("login-username").value;
+    const p = document.getElementById("login-password").value;
+    try {
+      await login(u, p);
+      closeModal("login-modal");
+      location.reload();
+    } catch (e) {
+      alert(e.message);
+    }
+  };
+
+  // Register submit
+  document.getElementById("register-submit").onclick = async () => {
+    const u = document.getElementById("register-username").value;
+    const p = document.getElementById("register-password").value;
+    try {
+      await register(u, p);
+      closeModal("register-modal");
+      openModal("login-modal");
+    } catch (e) {
+      alert(e.message);
+    }
+  };
+}
 
 document.addEventListener("DOMContentLoaded", () => {
-init();
+  init();          // your existing trick loading
+  setupAuthUI();   // new auth UI setup
 });
-
