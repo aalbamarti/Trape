@@ -13,7 +13,7 @@ app.use(cors());
 app.use(express.json());
 
 //app.use(cors());
-
+console.log("JWT_SECRET is:", process.env.JWT_SECRET);
 // Required for ES modules to get __dirname
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -33,6 +33,9 @@ const db = mysql.createPool({
   database: process.env.DB_NAME
 });
 
+db.query("SELECT 1")
+  .then(() => console.log("✅ Database connection works"))
+  .catch(err => console.error("❌ DB connection error:", err));
 
 // Endpoint to fetch tricks
 app.get("/tricks", async (req, res) => {
@@ -125,6 +128,18 @@ app.post("/progress", authenticate, async (req, res) => {
     res.status(500).json({ error: "Server error" });
   }
 });
+
+app.get("/test-users", async (req, res) => {
+  try {
+    const [rows] = await db.query("SELECT * FROM users");
+    console.log(rows);
+    res.json(rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Database query failed" });
+  }
+});
+
 
 const PORT = 3000;
 app.listen(PORT, () => console.log(`Server running at http://localhost:${PORT}`));
