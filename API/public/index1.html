@@ -7,43 +7,40 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
+    <h1>L'Enciclopèdia del Trapezi</h1>
+    <div id="alphabet-bar" class="line-bar"></div>
+    <div id="difficulty-menu" class="line-bar"></div>
+    <div id="tags-menu" class="line-bar"></div>
+    <div id="tricks-container"></div>
+    
+
   <button id="login-btn" class="top-button">Inicia Sessió</button>
   <div id="user-info" class="hidden"></div>
 
-  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+    <!-- Sign In / Register Section -->
+  <div id="auth-overlay" class="auth-overlay">
+    <div class="auth-modal">
+      <h2>Inicia sessió o registra’t</h2>
 
-  <h1>L'Enciclopèdia del Trapezi</h1>
-  <div id="alphabet-bar" class="line-bar"></div>
-  <div id="difficulty-menu" class="line-bar"></div>
-  <div id="tags-menu" class="line-bar"></div>
-  <div id="tricks-container"></div>
+      <!-- Login -->
+      <div id="login-form">
+        <h3>Login</h3>
+        <input id="login-username" type="text" placeholder="Nom d'usuari">
+        <input id="login-password" type="password" placeholder="Contrasenya">
+        <button id="login-submit">Entrar</button>
+      </div>
+
+      <hr>
+
+      <!-- Register -->
+      <div id="register-form">
+        <h3>Registra’t</h3>
+        <input id="register-username" type="text" placeholder="Nom d'usuari">
+        <input id="register-password" type="password" placeholder="Contrasenya">
+        <button id="register-submit">Crear Compte</button>
+      </div>
+    </div>
+  </div>
   <script type="module" src="./js/main.js"></script>
-  <!-- Login Modal -->
-  <div id="login-modal" class="modal hidden">
-    <div class="modal-content">
-      <span id="close-login" class="close">&times;</span>
-      <h2>Inicia Sessió</h2>
-
-      <input id="login-username" type="text" placeholder="Nom d'usuari">
-      <input id="login-password" type="password" placeholder="Contrasenya">
-
-      <button id="login-submit">Entrar</button>
-      <p>No tens compte? <span id="open-register" class="link">Registra't</span></p>
-    </div>
-  </div>
-
-  <!-- Register Modal -->
-  <div id="register-modal" class="modal hidden">
-    <div class="modal-content">
-      <span id="close-register" class="close">&times;</span>
-      <h2>Registra't</h2>
-
-      <input id="register-username" type="text" placeholder="Nom d'usuari">
-      <input id="register-password" type="password" placeholder="Contrasenya">
-
-      <button id="register-submit">Crear Compte</button>
-    </div>
-  </div>
-
 </body>
 </html>

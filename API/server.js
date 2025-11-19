@@ -1,5 +1,6 @@
+// server.js (fixed)
 import express from "express";
-import mysql from "mysql2/promise"; // promise version for async/await
+import mysql from "mysql2/promise";
 import cors from "cors";
 import path from "path";
 import bcrypt from "bcrypt";
@@ -7,137 +8,141 @@ import { fileURLToPath } from "url";
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
 
-const app = express();
 dotenv.config();
+const app = express();
 app.use(cors());
 app.use(express.json());
 
-//app.use(cors());
-// Required for ES modules to get __dirname
+// __dirname shim for ES modules
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+// static files
 app.use(express.static(path.join(__dirname, "public")));
 app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "public", "index1.html"));
+  res.sendFile(path.join(__dirname, "public", "index1.html")); // change name if needed
 });
 
-// Database connection pool
-const db = mysql.createPool({
-  host: process.env.DB_HOST,
-  user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
-  database: process.env.DB_NAME
+// DEBUG: verify .env is loaded
+console.log("ENV:", process.env.DB_HOST, process.env.DB_USER, process.env.DB_NAME);
+
+// create a pool and use it for all queries
+const db = await mysql.createPool({
+  host: process.env.DB_HOST || "localhost",
+  user: process.env.DB_USER || "trapezi_user",
+  password: process.env.DB_PASSWORD || "yourpassword",
+  database: process.env.DB_NAME || "trapezi",
+  waitForConnections: true,
+  connectionLimit: 10,
+  queueLimit: 0
 });
 
-db.query("SELECT 1")
-  .then(() => console.log("✅ Database connection works"))
-  .catch(err => console.error("❌ DB connection error:", err));
+// Test route to confirm DB works
+app.get("/health", async (req, res) => {
+  try {
+    const [rows] = await db.query("SELECT 1 AS ok");
+    res.json({ ok: true, db: rows[0] });
+  } catch (err) {
+    console.error("health check db error:", err);
+    res.status(500).json({ ok: false, error: String(err) });
+  }
+});
 
-// Endpoint to fetch tricks
+// fetch tricks (uses pool)
 app.get("/tricks", async (req, res) => {
   try {
     const [rows] = await db.query("SELECT * FROM tricks");
     res.json(rows);
   } catch (err) {
-    console.error(err);
+    console.error("GET /tricks error:", err);
     res.status(500).json({ error: "Database query failed" });
   }
 });
 
-//User registration route
+// REGISTER
 app.post("/register", async (req, res) => {
   const { username, password } = req.body;
-  console.log("Received /register request:", req.body); // <<< això veuràs al terminal
+  if (!username || !password) return res.status(400).json({ error: "username & password required" });
 
   try {
-    const [existing] = await db.query("SELECT id FROM users WHERE username=?", [username]);
+    const [existing] = await db.query("SELECT id FROM users WHERE username = ?", [username]);
     if (existing.length > 0) return res.status(400).json({ error: "User already exists" });
 
     const hash = await bcrypt.hash(password, 10);
     const [result] = await db.query("INSERT INTO users (username, password_hash) VALUES (?, ?)", [username, hash]);
-
     res.json({ message: "User created", userId: result.insertId });
   } catch (err) {
-    console.error(err);
+    console.error("POST /register error:", err);
     res.status(500).json({ error: "Server error" });
   }
 });
 
-//User login route
+// LOGIN
 app.post("/login", async (req, res) => {
   const { username, password } = req.body;
+  if (!username || !password) return res.status(400).json({ error: "username & password required" });
 
   try {
-    const [users] = await db.query("SELECT * FROM users WHERE username=?", [username]);
+    const [users] = await db.query("SELECT * FROM users WHERE username = ?", [username]);
     if (users.length === 0) return res.status(400).json({ error: "Invalid credentials" });
 
     const user = users[0];
     const valid = await bcrypt.compare(password, user.password_hash);
     if (!valid) return res.status(400).json({ error: "Invalid credentials" });
 
-    const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET, { expiresIn: "1d" });
-    res.json({ token });
+    const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET || "devsecret", { expiresIn: "1d" });
+    res.json({ token, userId: user.id });
   } catch (err) {
-    console.error(err);
+    console.error("POST /login error:", err);
     res.status(500).json({ error: "Server error" });
   }
 });
 
-// Middleware to authenticate JWT tokens
+// auth middleware
 const authenticate = (req, res, next) => {
   const authHeader = req.headers.authorization;
   if (!authHeader) return res.status(401).json({ error: "No token provided" });
-
   const token = authHeader.split(" ")[1];
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || "devsecret");
     req.userId = decoded.id;
     next();
-  } catch {
-    res.status(401).json({ error: "Invalid token" });
+  } catch (err) {
+    return res.status(401).json({ error: "Invalid token" });
   }
 };
 
-//Track user progress
-// Get all progress for the logged-in user
+// GET user progress
 app.get("/progress", authenticate, async (req, res) => {
-  const userId = req.userId;
-  const [rows] = await db.query("SELECT * FROM user_progress WHERE user_id=?", [userId]);
-  res.json(rows);
-});
-
-// Update status of a trick
-app.post("/progress", authenticate, async (req, res) => {
-  const userId = req.userId;
-  const { trick_id, status } = req.body;
-
   try {
-    // Insert or update
-    await db.query(`
-      INSERT INTO user_progress (user_id, trick_id, status) 
-      VALUES (?, ?, ?)
-      ON DUPLICATE KEY UPDATE status=VALUES(status)
-    `, [userId, trick_id, status]);
-
-    res.json({ message: "Progress updated" });
+    const userId = req.userId;
+    const [rows] = await db.query("SELECT * FROM user_progress WHERE user_id = ?", [userId]);
+    res.json(rows);
   } catch (err) {
-    console.error(err);
+    console.error("GET /progress error:", err);
     res.status(500).json({ error: "Server error" });
   }
 });
 
-app.get("/test-users", async (req, res) => {
+// UPSERT progress
+app.post("/progress", authenticate, async (req, res) => {
   try {
-    const [rows] = await db.query("SELECT * FROM users");
-    console.log(rows);
-    res.json(rows);
+    const userId = req.userId;
+    const { trick_id, status } = req.body;
+    if (!trick_id || !status) return res.status(400).json({ error: "trick_id and status required" });
+
+    await db.query(
+      `INSERT INTO user_progress (user_id, trick_id, status) VALUES (?, ?, ?)
+       ON DUPLICATE KEY UPDATE status = VALUES(status), updated_at = CURRENT_TIMESTAMP`,
+      [userId, trick_id, status]
+    );
+    res.json({ message: "Progress updated" });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Database query failed" });
+    console.error("POST /progress error:", err);
+    res.status(500).json({ error: "Server error" });
   }
 });
 
-
-const PORT = 3000;
+// single app.listen
+const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Server running at http://localhost:${PORT}`));
