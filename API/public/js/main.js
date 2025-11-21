@@ -19,50 +19,6 @@ async function init() {
   setupTagsMenu(allTricks, refresh);
 }
 
-/*
-document.addEventListener("DOMContentLoaded", () => {
-  console.log("DOMContentLoaded fired");
-  const overlay = document.getElementById("auth-overlay");
-
-  function showContentAfterLogin() {
-    overlay.classList.add("hidden"); // hide modal
-    init(); // load tricks
-  }
-
-  // If already logged in
-  if (getToken()) {
-    showContentAfterLogin();
-    return;
-  }
-
-  // Setup login/register buttons
-  document.getElementById("login-submit").onclick = async () => {
-    console.log("Login button clicked");
-    const u = document.getElementById("login-username").value;
-    const p = document.getElementById("login-password").value;
-    try {
-      await login(u, p);
-      showContentAfterLogin();
-    } catch (e) {
-      alert(e.message);
-    }
-  };
-
-  document.getElementById("register-submit").onclick = async () => {
-    console.log("Register button clicked");
-    const u = document.getElementById("register-username").value;
-    const p = document.getElementById("register-password").value;
-    try {
-      await register(u, p);
-      await login(u, p);
-      showContentAfterLogin();
-    } catch (e) {
-      alert(e.message);
-    }
-  };
-});
-*/
-
 // -------------------------------------------
 // AUTH UI LOGIC
 // -------------------------------------------
@@ -89,15 +45,17 @@ function setupAuthUI() {
   function showContentAfterLogin() {
     const overlay = document.getElementById("auth-overlay");
     overlay.classList.add("hidden");
-    //overlay.style.display="none"; // hide modal
+    overlay.style.display="none"; // hide modal
     init();
   }
 
   // ---------------------------------------
   // If already logged in → skip modal
   // ---------------------------------------
+  console.log("getToken() returned:", getToken());
   if (getToken()) {
     console.log("Token found, skipping login screen.");
+    console.log("Token in localStorage:", localStorage.getItem("token"));
     showContentAfterLogin();
     return;
   }
@@ -143,4 +101,5 @@ document.addEventListener("DOMContentLoaded", () => {
   console.log("DOMContentLoaded fired — starting setupAuthUI()");
   setupAuthUI();
 });
+
 

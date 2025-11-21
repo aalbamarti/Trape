@@ -129,7 +129,7 @@ button.active {
   cursor: pointer;
   text-decoration: underline;
 }
-.auth-section {
+.auth-overlay {
   max-width: 400px;
   margin: 20px auto;
   padding: 20px;
@@ -140,24 +140,7 @@ button.active {
   flex-direction: column;
   gap: 15px;
 }
-
-.auth-section input {
-  padding: 8px;
-  border-radius: 4px;
-  border: 1px solid #ccc;
-}
-
-.auth-section button {
-  background: #44c187;
-  color: white;
-  border: none;
-  padding: 10px;
-  border-radius: 6px;
-  cursor: pointer;
-}
-
-.auth-section button:hover { background: #2ea86f; }
-
+/*
 .auth-overlay {
   position: fixed;
   top: 0; left: 0; right: 0; bottom: 0;
@@ -166,7 +149,26 @@ button.active {
   justify-content: center;
   align-items: center;
   z-index: 1000;
+}*/
+
+.auth-overlay input {
+  padding: 8px;
+  border-radius: 4px;
+  border: 1px solid #ccc;
 }
+
+.auth-overlay button {
+  background: #44c187;
+  color: white;
+  border: none;
+  padding: 10px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.auth-overlay button:hover { background: #2ea86f; }
+
+
 
 .auth-modal {
   background: white;
@@ -194,6 +196,6 @@ button.active {
 }
 .auth-modal button:hover { background: #2ea86f; }
 
-.auth-overlay.hidden {
+.auth-overlay.hidden{
   display: none !important; /* hide when .hidden is added */
 }
