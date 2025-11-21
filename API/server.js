@@ -140,6 +140,21 @@ app.post("/progress", authenticate, async (req, res) => {
   }
 });
 
+app.post("/progress", authenticate, async (req, res) => {
+  const { trickId, status } = req.body;
+  const userId = req.user.id;
+
+  await db.query(
+    `INSERT INTO user_progress (user_id, trick_id, status)
+     VALUES (?, ?, ?)
+     ON DUPLICATE KEY UPDATE status = VALUES(status), updated_at = NOW()`,
+    [userId, trickId, status]
+  );
+
+  res.json({ success: true });
+});
+
+
 // single app.listen
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Server running at http://localhost:${PORT}`));

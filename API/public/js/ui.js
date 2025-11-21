@@ -6,6 +6,7 @@ export function displayTricks(tricks) {
   const container = document.getElementById("tricks-container");
   container.innerHTML = "";
   tricks.forEach(trick => container.appendChild(createTrickCard(trick)));
+  setupProgressListeners();
 }
 
 export function setupAlphabetBar(tricks, refresh) {
@@ -87,5 +88,49 @@ export function setupTagsMenu(tricks, refresh) {
     };
 
     container.appendChild(btn);
+  });
+}
+
+export function setupProgressListeners() {
+  document.querySelectorAll(".progress-status").forEach(container => {
+    const trickId = container.dataset.trickId;
+    const icon = container.querySelector(".status-icon");
+
+    // 1. Create the horizontal menu dynamically
+    const menu = document.createElement("div");
+    menu.className = "status-menu";
+    menu.innerHTML = `
+      <span data-status="objective" title="Objectiu">🎯</span>
+      <span data-status="learning" title="Procés">🟡</span>
+      <span data-status="mastered" title="Aconseguit">🟢</span>
+    `;
+    container.appendChild(menu);
+
+    // 2. Toggle menu on click of the emoji icon
+    icon.addEventListener("click", () => {
+      menu.classList.toggle("show"); // <-- your first snippet goes here
+    });
+
+    // 3. Select an option
+    menu.querySelectorAll("span").forEach(option => {
+      option.addEventListener("click", async (e) => {
+        const newStatus = e.target.dataset.status;
+
+        try {
+          await updateProgress(trickId, newStatus); // API call
+          icon.textContent = e.target.textContent;   // update emoji
+          menu.classList.remove("show");             // hide menu after click
+        } catch (err) {
+          alert("Error guardant el progrés");
+        }
+      });
+    });
+
+    // 4. Close the menu if user clicks outside
+    document.addEventListener("click", e => {      // <-- second snippet goes here
+      if (!container.contains(e.target)) {
+        menu.classList.remove("show");
+      }
+    });
   });
 }

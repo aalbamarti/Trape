@@ -1,5 +1,5 @@
 /* General styles */
-body { font-family: Arial, sans-serif; background: #f5f5f5; padding: 20px; }
+body { font-family: MyFont; background: #f5f5f5; padding: 20px; }
 .trick-card { 
   background: #fff; padding: 15px; margin: 10px auto; 
   border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); max-width: 600px;
@@ -140,17 +140,6 @@ button.active {
   flex-direction: column;
   gap: 15px;
 }
-/*
-.auth-overlay {
-  position: fixed;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(0,0,0,0.5);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 1000;
-}*/
-
 .auth-overlay input {
   padding: 8px;
   border-radius: 4px;
@@ -204,9 +193,60 @@ button.active {
   position: fixed;
   top: 10px;
   right: 10px;
-  background: #44c187;
-  color: white;
+  color: black;
   padding: 8px 12px;
   border-radius: 6px;
   font-weight: bold;
 } 
+
+/*Track progress */
+.progress-status {
+  position: relative;
+  display: inline-block;
+  cursor: pointer;
+  margin-left: 10px;
+}
+
+.status-icon {
+  font-size: 1.4rem;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.status-icon:hover {
+  transform: scale(1.2);
+}
+
+.status-menu {
+  position: absolute;
+  top: 25px;
+  left: 0;
+  background: white;
+  border: 1px solid #ccc;
+  padding: 6px;
+  border-radius: 6px;
+  display: none;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+  z-index: 100;
+  flex-direction: row;    /* left → right */
+  gap: 6px; 
+
+  opacity: 0;           /* hidden by default */
+  pointer-events: none; /* prevents clicks when hidden */
+  transition: opacity 0.2s;
+}
+
+.status-menu.show {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.status-menu span {
+  font-size: 1.3rem;
+  margin: 4px;
+  cursor: pointer;
+}
+
+.status-menu span:hover {
+  transform: scale(1.2);
+}

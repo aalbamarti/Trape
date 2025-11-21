@@ -30,6 +30,7 @@ export function createTrickCard(trick) {
     </div>
     <p>${tagsArray.map(tag => `<span class="tag-badge">${tag}</span>`).join(' ')}</p>
     <iframe src="${getEmbedLink(trick.youtube_link)}" allowfullscreen></iframe> 
+    <div class="progress-status" data-trick-id="${trick.id}"> <span class="status-icon" title="Sense progrés">⚪</span> </div>
     ${driveDownload ? `
     <div class="download-container">
       <a href="${driveDownload}" class="download-btn" download>📥 Descarrega el vídeo</a>

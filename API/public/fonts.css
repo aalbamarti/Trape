@@ -1,0 +1,19 @@
+/* public/fonts.css */
+
+/* Custom font family */
+@font-face {
+  font-family: "MyFont";
+  src: url("./Saans/Saans/WEB/Saans-TRIAL-Medium.woff2") format("woff2");
+  font-weight: normal;
+}
+
+@font-face {
+  font-family: "MyFont";
+src: url("./Saans/Saans/WEB/Saans-TRIAL-Bold.woff2") format("woff2");
+  font-weight: bold;
+}
+
+/* Optional: apply globally */
+body {
+  font-family: "MyFont", sans-serif;
+}
