@@ -23,8 +23,6 @@ app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "index1.html")); // change name if needed
 });
 
-// DEBUG: verify .env is loaded
-console.log("ENV:", process.env.DB_HOST, process.env.DB_USER, process.env.DB_NAME);
 // create a pool and use it for all queries
 const db = await mysql.createPool({
   host: process.env.DB_HOST || "localhost",

@@ -8,7 +8,7 @@ export async function login(username, password) {
   });
   if (!res.ok) throw new Error("Credencials incorrectes");
   const data = await res.json();
-  //localStorage.setItem("token", data.token);
+  localStorage.setItem("username", username);
   return data;
 }
 

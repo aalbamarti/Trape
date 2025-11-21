@@ -199,3 +199,14 @@ button.active {
 .auth-overlay.hidden{
   display: none !important; /* hide when .hidden is added */
 }
+
+#user-info {
+  position: fixed;
+  top: 10px;
+  right: 10px;
+  background: #44c187;
+  color: white;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-weight: bold;
+} 

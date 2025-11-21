@@ -46,6 +46,14 @@ function setupAuthUI() {
     const overlay = document.getElementById("auth-overlay");
     overlay.classList.add("hidden");
     overlay.style.display="none"; // hide modal
+
+    const username = localStorage.getItem("username");
+    const userInfo = document.getElementById("user-info");
+
+    if (username) {
+      userInfo.textContent = `👤 ${username}`;
+      userInfo.classList.remove("hidden");
+    }
     init();
   }
 
