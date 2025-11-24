@@ -250,3 +250,21 @@ button.active {
 .status-menu span:hover {
   transform: scale(1.2);
 }
+
+.progress-bar {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+  font-size: 1.4em;
+}
+
+.progress-option {
+  filter: grayscale(100%) brightness(70%);
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.progress-option.active {
+  filter: none;
+  transform: scale(1.2);
+}

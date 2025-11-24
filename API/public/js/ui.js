@@ -1,12 +1,14 @@
 // js/ui.js
 import { filterTricks, selectedDifficulties, selectedLetter, selectedTags } from "./filters.js";
 import { createTrickCard } from "./tricks.js";
+import { updateProgress, fetchProgress } from "./api.js";
 
 export function displayTricks(tricks) {
   const container = document.getElementById("tricks-container");
   container.innerHTML = "";
   tricks.forEach(trick => container.appendChild(createTrickCard(trick)));
-  setupProgressListeners();
+  //setupProgressListeners();
+  setupProgressBar();
 }
 
 export function setupAlphabetBar(tricks, refresh) {
@@ -91,46 +93,56 @@ export function setupTagsMenu(tricks, refresh) {
   });
 }
 
-export function setupProgressListeners() {
-  document.querySelectorAll(".progress-status").forEach(container => {
-    const trickId = container.dataset.trickId;
-    const icon = container.querySelector(".status-icon");
 
-    // 1. Create the horizontal menu dynamically
-    const menu = document.createElement("div");
-    menu.className = "status-menu";
-    menu.innerHTML = `
-      <span data-status="objective" title="Objectiu">🎯</span>
-      <span data-status="learning" title="Procés">🟡</span>
-      <span data-status="mastered" title="Aconseguit">🟢</span>
-    `;
-    container.appendChild(menu);
+// ui.js (continued)
+export async function setupProgressBar() {
+  const progressMap = await fetchProgress(); // { [trick_id]: status }
 
-    // 2. Toggle menu on click of the emoji icon
-    icon.addEventListener("click", () => {
-      menu.classList.toggle("show"); // <-- your first snippet goes here
+  // Attach listeners and set initial state
+  document.querySelectorAll(".progress-bar").forEach(bar => {
+    const trick_id = bar.dataset.trick_id;
+    const options = Array.from(bar.querySelectorAll(".progress-option"));
+
+    // Set initial active state if saved
+    const saved = progressMap[trick_id];
+    if (saved) {
+      options.forEach(o => o.classList.toggle("active", o.dataset.status === saved));
+    } else {
+      // ensure none active
+      options.forEach(o => o.classList.remove("active"));
+    }
+
+    // Remove existing listeners (safe if re-run)
+    options.forEach(o => {
+      const newEl = o.cloneNode(true);
+      o.parentNode.replaceChild(newEl, o);
     });
 
-    // 3. Select an option
-    menu.querySelectorAll("span").forEach(option => {
+    const freshOptions = Array.from(bar.querySelectorAll(".progress-option"));
+
+    // Click behavior
+    freshOptions.forEach(option => {
       option.addEventListener("click", async (e) => {
-        const newStatus = e.target.dataset.status;
+        const status = option.dataset.status;
+
+        // optimistic UI: update the visuals first
+        freshOptions.forEach(o => o.classList.remove("active"));
+        option.classList.add("active");
 
         try {
-          await updateProgress(trickId, newStatus); // API call
-          icon.textContent = e.target.textContent;   // update emoji
-          menu.classList.remove("show");             // hide menu after click
+          await updateProgress(trick_id, status);
         } catch (err) {
+          console.error("Failed to update progress:", err);
+          // rollback visual change on error
+          freshOptions.forEach(o => o.classList.remove("active"));
+          const prev = progressMap[trick_id];
+          if (prev) {
+            const prevEl = bar.querySelector(`.progress-option[data-status="${prev}"]`);
+            if (prevEl) prevEl.classList.add("active");
+          }
           alert("Error guardant el progrés");
         }
       });
-    });
-
-    // 4. Close the menu if user clicks outside
-    document.addEventListener("click", e => {      // <-- second snippet goes here
-      if (!container.contains(e.target)) {
-        menu.classList.remove("show");
-      }
     });
   });
 }
