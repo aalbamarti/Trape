@@ -20,7 +20,7 @@ export async function updateProgress(trick_id, status) {
       "Content-Type": "application/json",
       "Authorization": "Bearer " + token
     },
-    body: JSON.stringify({trick_id, status: status })
+    body: JSON.stringify({trick_id, status })
   });
 
     if (!res.ok) {

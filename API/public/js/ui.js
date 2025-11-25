@@ -94,13 +94,12 @@ export function setupTagsMenu(tricks, refresh) {
 }
 
 
-// ui.js (continued)
 export async function setupProgressBar() {
   const progressMap = await fetchProgress(); // { [trick_id]: status }
 
   // Attach listeners and set initial state
   document.querySelectorAll(".progress-bar").forEach(bar => {
-    const trick_id = bar.dataset.trick_id;
+    const trick_id = bar.dataset.trickId;
     const options = Array.from(bar.querySelectorAll(".progress-option"));
 
     // Set initial active state if saved
