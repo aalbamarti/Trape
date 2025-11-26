@@ -6,7 +6,7 @@
   "scripts": {
     "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
     "test:mock": "node --experimental-vm-modules node_modules/jest/bin/jest.js --testPathPatterns=mock\\.test\\.js",
-    "test:db": "node --experimental-vm-modules node_modules/jest/bin/jest.js --testPathPatterns=db\\.test\\.js"
+   "test:db": "node --experimental-vm-modules node_modules/jest/bin/jest.js --testPathPatterns=db\\.test\\.js"
   },
   "jest": {
     "testEnvironment": "node"
