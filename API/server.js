@@ -1,17 +1,18 @@
 // server.js (fixed)
 import express from "express";
-import mysql from "mysql2/promise";
 import cors from "cors";
 import path from "path";
 import bcrypt from "bcrypt";
 import { fileURLToPath } from "url";
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
+import db from "./db.js";
 
 dotenv.config();
 const app = express();
 app.use(cors());
 app.use(express.json());
+export default app;
 
 // __dirname shim for ES modules
 const __filename = fileURLToPath(import.meta.url);
@@ -20,11 +21,11 @@ const __dirname = path.dirname(__filename);
 // static files
 app.use(express.static(path.join(__dirname, "public")));
 app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "public", "index1.html")); // change name if needed
+  res.sendFile(path.join(__dirname, "public", "index1.html")); 
 });
 
 // create a pool and use it for all queries
-const db = await mysql.createPool({
+/*const db = await mysql.createPool({
   host: process.env.DB_HOST || "localhost",
   user: process.env.DB_USER || "trapezi_user",
   password: process.env.DB_PASSWORD || "yourpassword",
@@ -32,7 +33,7 @@ const db = await mysql.createPool({
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0
-});
+});*/
 
 // Test route to confirm DB works
 app.get("/health", async (req, res) => {
@@ -133,12 +134,16 @@ app.post("/progress", authenticate, async (req, res) => {
        ON DUPLICATE KEY UPDATE status = VALUES(status), updated_at = CURRENT_TIMESTAMP`,
       [userId, trick_id, status]
     );
-    res.json({ message: "Progress updated" });
+    res.status(200).json({ message: "Progress updated" });
   } catch (err) {
     console.error("POST /progress error:", err);
     res.status(500).json({ error: "Server error" });
   }
 });
+// server.js
+/*if (process.env.NODE_ENV !== "test") {
+  app.listen(3000, () => console.log("Server running at http://localhost:3000"));
+}*/
 
 
 // single app.listen
